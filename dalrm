@@ -1,0 +1,166 @@
+#!/usr/bin/env bash
+# Diox' Alarm, first draft
+# Warning: Don't put anything important (rsync, etc) in the script; it's killed
+#          after read_timeout (FIXME or when user presses key other than s/q)
+#          Requires both bash and possibly also GNU date
+
+# TODO: Round-down alarm time to minutes (subtract <seconds> from unixtime)
+
+read_timeout=10 # Must be in seconds
+ snooze_time="10 minutes"
+human_format="%a%e, %H:%M"
+            
+# Toilet settings. If the font is missing, the default will be tried.
+# Some cool ones: # basic, cricket, graffiti, larry3d, sblood, shadow
+
+toilet_font="cricket"
+toilet_format_time="%H : %M"
+toilet_format_alarm="%H : %M"
+
+          ansi_dred="\e[31m" # red
+           ansi_red="\e[1;31m" # bold + red
+         ansi_green="\e[1;32m" # bold + green
+        ansi_yellow="\e[1;33m" # bold + yellow
+      ansi_clr_line="\e[K"
+    ansi_clr_colors="\e[0m"
+   ansi_save_cursor="\e[s"
+ansi_restore_cursor="\e[u"
+
+if [ -z "$BASH_VERSION" ]; then
+    echo "Bash is required"! >&2
+    exit 1
+fi
+
+print_remaining() {
+    local total_seconds=$1
+    local dd hh mm ss ut
+    let dd="$total_seconds / 60 / 60 / 24"
+    let hh="$total_seconds / 60 / 60 % 24"
+    let mm="$total_seconds / 60 % 60"
+    let ss="$total_seconds % 60"
+
+    if [ $dd -ne 0 ]; then
+        ut[0]="$dd day"
+        [[ $dd -gt 1 ]] && ut[0]+="s"
+    fi
+
+    if [ $hh -ne 0 ]; then
+        ut[1]="$hh hour"
+        [[ $hh -gt 1 ]] && ut[1]+="s"
+    fi
+
+    if [ $mm -ne 0 ]; then
+        ut[2]="$mm minute"
+        [[ $mm -gt 1 ]] && ut[2]+="s"
+    else
+        if [ $dd -eq 0 -a $hh -eq 0 ]; then
+            if [ $ss -lt 1 ]; then
+                ut[2]="now"
+            else
+                ut[2]="less than 1 minute"
+            fi
+        fi
+    fi
+ 
+    echo -en "${ut[@]}"
+}
+
+wakeup() {
+    $arg_script &
+
+    local bg_pid=$!
+    local user_input
+
+    echo -en "\n[${ansi_green}q${ansi_clr_colors}] to stop, "
+    echo -e "[${ansi_yellow}s${ansi_clr_colors}] to snooze"
+
+    # TODO: Keep asking the question if a key *not* matching anything (i.e not q and not k), so the script doesn't abuptly stop when a key is pressed.
+    # Keep track of time spent (shorter than the runtime of snooze_time) so the function ceases the read-loop after a certain time
+    read -N 1 -t ${read_timeout} user_input
+    pkill -P $bg_pid
+
+    case "$user_input" in
+        "q")
+            echo
+            exit
+        ;;
+        "s")
+            unixtime_alarm=$(date +"%s" -d "$snooze_time")
+            human_alarm="$(date +"${human_format}" -d "$snooze_time")"
+            clear
+        ;;
+    esac
+
+    alrm
+}
+
+alrm() {
+    local let seconds=2 # Anything greater than 1
+    while [ $seconds -gt 1 ]
+    do
+        unixtime_now="$(date +%s)"
+        human_now="$(date +"${human_format}")"
+        let seconds="$unixtime_alarm - $unixtime_now"
+
+        echo -en "${ansi_restore_cursor}"
+        echo -en "${human_now}, $arg_script will loop every "
+        echo -e "${read_timeout} seconds starting ${ansi_clr_line}"
+        echo -en "${ansi_red}${human_alarm}${ansi_clr_colors} "
+        echo -n '('; print_remaining $seconds; echo -e ")${ansi_clr_line}"
+
+        if [ "$toilet" = "1" ]; then
+            echo -e "$ansi_clr_line"
+            toilet_time="$(date +"$toilet_format_time")"
+            toilet_alarm=$(date +"$toilet_format_alarm" -d @$unixtime_alarm)
+            toilet --filter crop --font "$toilet_font" "$toilet_time"
+            echo -en "${ansi_red}"
+            echo
+            toilet --filter crop --font "$toilet_font" "$toilet_alarm"
+            echo -en "${ansi_clr_colors}"
+        fi
+
+        sleep 1
+    done
+
+    wakeup
+}
+
+if [ $# -ne 2 ]; then
+    me="$(basename $0)"
+    echo "Usage: $me <script filename> <time>"
+    echo
+    echo "Examples:"
+    echo "  $me ./test.bash 06:30"
+    echo "  $me ./test.bash \"Friday 13:00\""
+    echo "  $me \$(which ls) \"1 minute 10 seconds\""
+    echo
+    echo "^C exits"
+    exit 0
+fi
+
+arg_script="$1"
+arg_time="$2"
+
+# Sanity checks
+if [ ! -x "$arg_script" ]; then
+    echo "\"$arg_script\": not executable, or doesn't exist" >&2
+    exit 1
+fi
+
+date +"${human_format}" -d "$arg_time" > /dev/null 2>&1 || {
+    echo -n "Failed to run \`date\` command: " >&2
+    echo "date +\"${human_format}\" -d \"$arg_time\"" >&2
+    date --version 2>&1 | head -n1 >&2
+    exit 1
+}
+
+which pkill || exit 1
+
+unixtime_alarm=$(date +"%s" -d "$arg_time")
+human_alarm="$(date +"${human_format}" -d "$arg_time")"
+
+which toilet > /dev/null 2>&1 && toilet=1
+
+clear
+echo -e "${ansi_save_cursor}"
+alrm
