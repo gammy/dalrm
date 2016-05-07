@@ -12,7 +12,6 @@ human_format="%a%e, %H:%M"
             
 # Toilet settings. If the font is missing, the default will be tried.
 # Some cool ones: # basic, cricket, graffiti, larry3d, sblood, shadow
-
 toilet_font="cricket"
 toilet_format_time="%H : %M"
 toilet_format_alarm="%H : %M"
@@ -154,12 +153,18 @@ date +"${human_format}" -d "$arg_time" > /dev/null 2>&1 || {
     exit 1
 }
 
-which pkill || exit 1
+which pkill > /dev/null || exit 1
+if which toilet > /dev/null 2>&1; then
+    toilet=1
+    # Switch to the stock figlet font if we fail to run toilet with the preset 
+    if ! toilet --font "$toilet_font" fonttest > /dev/null 2>&1; then
+        toilet_font="ascii9"
+    fi
+fi
 
+read foo
 unixtime_alarm=$(date +"%s" -d "$arg_time")
 human_alarm="$(date +"${human_format}" -d "$arg_time")"
-
-which toilet > /dev/null 2>&1 && toilet=1
 
 clear
 echo -e "${ansi_save_cursor}"
