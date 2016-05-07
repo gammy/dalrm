@@ -102,11 +102,12 @@ snoozecheck() {
 }
 
 ring() {
-    eval $arg_script &
+    $arg_script &
     local bg_pid=$!
 
     snoozecheck
     pkill -P $bg_pid
+    kill $bg_pid
 
     case "$user_input" in
         "$key_quit")
