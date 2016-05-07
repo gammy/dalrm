@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 # Diox' Alarm, first draft
 # Warning: Don't put anything important (rsync, etc) in the script; it's killed
-#          after read_timeout (FIXME or when user presses key other than s/q)
+#          after read_timeout 
 #          Requires both bash and possibly also GNU date
-
-# TODO: Round-down alarm time to minutes (subtract <seconds> from unixtime)
 
 read_timeout=10 # Must be in seconds
  snooze_time="10 minutes"
@@ -14,7 +12,7 @@ human_format="%a%e, %H:%M:%S"
 key_snooze=s
             
 # Toilet settings. If the font is missing, the default will be tried.
-# Some cool ones: # basic, cricket, graffiti, larry3d, sblood, shadow
+# Some cool ones: cricket, basic, graffiti, larry3d, sblood, shadow
         toilet_font="cricket"
  toilet_format_time="%H : %M"
 toilet_format_alarm="%H : %M"
@@ -32,6 +30,11 @@ if [ -z "$BASH_VERSION" ]; then
     echo "Bash is required"! >&2
     exit 1
 fi
+
+deps=(pkill date bash grep stty)
+for dep in ${deps[@]}; do
+        which $dep > /dev/null || exit $?
+done
 
 print_remaining() {
     local total_seconds=$1
@@ -99,7 +102,7 @@ snoozecheck() {
 }
 
 ring() {
-    $arg_script &
+    eval $arg_script &
     local bg_pid=$!
 
     snoozecheck
@@ -157,7 +160,7 @@ alrm() {
 
 if [ $# -ne 2 ]; then
     me="$(basename $0)"
-    echo "Usage: $me <script filename> <time>"
+    echo "Usage: $me <script path> <time>"
     echo
     echo "Examples:"
     echo "  $me ./test.bash 06:30"
@@ -165,6 +168,10 @@ if [ $# -ne 2 ]; then
     echo "  $me \$(which ls) \"1 minute 10 seconds\""
     echo
     echo "^C or '$key_quit' exits; '$key_snooze' snoozes"
+    echo
+    echo "Note: <script path> *must* be a relative or absolute path. I.e"
+    echo "      \`./test.bash\` or \`/path/to/test.bash\`, but not \`test.bash\`"
+    echo
     echo "Install toilet (and fonts) to enhance the display"
     exit 0
 fi
@@ -185,7 +192,6 @@ date +"${human_format}" -d "$arg_time" > /dev/null 2>&1 || {
     exit 1
 }
 
-which pkill > /dev/null || exit 1
 if which toilet > /dev/null 2>&1; then
     toilet=1
     # Switch to the stock figlet font if we fail to run toilet with the preset 
