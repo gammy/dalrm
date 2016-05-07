@@ -9,11 +9,14 @@
 read_timeout=10 # Must be in seconds
  snooze_time="10 minutes"
 human_format="%a%e, %H:%M"
+
+  key_quit=q
+key_snooze=s
             
 # Toilet settings. If the font is missing, the default will be tried.
 # Some cool ones: # basic, cricket, graffiti, larry3d, sblood, shadow
-toilet_font="cricket"
-toilet_format_time="%H : %M"
+        toilet_font="cricket"
+ toilet_format_time="%H : %M"
 toilet_format_alarm="%H : %M"
 
           ansi_dred="\e[31m" # red
@@ -64,26 +67,48 @@ print_remaining() {
     echo -en "${ut[@]}"
 }
 
+readkey() {
+    # Note: user_input is global by design
+    local time_beg=$(date +"%s")
+    local displayed=
+
+    until [ "$user_input" = "$key_quit" -o \
+            "$user_input" = "$key_snooze" ]; do
+        if [ ! $displayed ]; then
+            echo -en "\n[${ansi_green}q${ansi_clr_colors}] to stop, "
+            echo -e "[${ansi_yellow}s${ansi_clr_colors}] to snooze"
+            displayed=1
+        fi
+
+        stty_old="$(stty -g)" # Store current tty settings
+        stty -echo # Disable local echo
+
+        read -N 1 -t 1 user_input
+        user_input=${user_input,,} # Convert to lower-case (bash 4.0+)
+
+        stty "$stty_old" # Restore previous tty settings
+
+        local time_end=$(date +"%s")
+        let time_diff="$time_end - $time_beg"
+        if [ $time_diff -ge $read_timeout ]; then
+            break
+        fi
+    done
+}
+
 wakeup() {
     $arg_script &
-
     local bg_pid=$!
-    local user_input
 
-    echo -en "\n[${ansi_green}q${ansi_clr_colors}] to stop, "
-    echo -e "[${ansi_yellow}s${ansi_clr_colors}] to snooze"
-
-    # TODO: Keep asking the question if a key *not* matching anything (i.e not q and not k), so the script doesn't abuptly stop when a key is pressed.
-    # Keep track of time spent (shorter than the runtime of snooze_time) so the function ceases the read-loop after a certain time
-    read -N 1 -t ${read_timeout} user_input
+    readkey
     pkill -P $bg_pid
 
     case "$user_input" in
-        "q")
+        "$key_quit")
             echo
             exit
         ;;
-        "s")
+        "$key_snooze")
             unixtime_alarm=$(date +"%s" -d "$snooze_time")
             human_alarm="$(date +"${human_format}" -d "$snooze_time")"
             clear
@@ -162,7 +187,6 @@ if which toilet > /dev/null 2>&1; then
     fi
 fi
 
-read foo
 unixtime_alarm=$(date +"%s" -d "$arg_time")
 human_alarm="$(date +"${human_format}" -d "$arg_time")"
 
