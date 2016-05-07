@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Diox' Alarm, first draft
+# Diox' Alarm
 # Warning: Don't put anything important (rsync, etc) in the script; it's killed
 #          after read_timeout 
 #          Requires both bash and possibly also GNU date
