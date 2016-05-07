@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Diox' Alarm
-# Warning: Don't put anything important (rsync, etc) in the script; it's killed
-#          after read_timeout 
-#          Requires both bash and possibly also GNU date
+# Diox' Alarm by gammy (https://github.com/gammypoofle/dalrm.git)
+# Note: Don't put anything important (rsync, etc) in the script; it's killed
+#       after read_timeout
+# Basic dependencies are `bash`, `pkill` and possibly the GNU variant of `date`
 
 read_timeout=10 # Must be in seconds
  snooze_time="10 minutes"
