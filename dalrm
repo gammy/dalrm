@@ -13,7 +13,8 @@ key_snooze=s
             
 # Toilet settings. If the font is missing, the default will be tried.
 # Some cool ones: cricket, basic, graffiti, larry3d, sblood, shadow
-        figlet_font="/usr/share/figlet/cricket.flf"
+   figlet_font_path="/usr/share/figlet"
+        figlet_font="$figlet_font_path/cricket.flf"
  figlet_format_time="%H : %M"
 figlet_format_alarm="%H : %M"
 
@@ -210,7 +211,7 @@ if which figlet > /dev/null 2>&1; then
     figlet=1
     # Switch to the stock figlet font if we fail to run figlet with the preset 
     if ! figlet -f "$figlet_font" fonttest > /dev/null 2>&1; then
-        figlet_font="ascii9"
+        figlet_font="$figlet_font_path/standard.flf"
     fi
 fi
 
