@@ -2,7 +2,7 @@
 # Diox' Alarm by gammy (https://github.com/gammypoofle/dalrm.git)
 # Note: Don't put anything important (rsync, etc) in the script; it's killed
 #       after read_timeout
-# Basic dependencies are `bash`, `pkill` and possibly the GNU variant of `date`
+# Basic dependencies are `bash`, `pkill` and the GNU variant of `date`
 
 read_timeout=10 # Must be in seconds
  snooze_time="10 minutes"
@@ -36,6 +36,15 @@ deps=(pkill date bash grep stty tput)
 for dep in ${deps[@]}; do
         which $dep > /dev/null || exit $?
 done
+
+# We really depend on GNU date. 
+# BSD date lacks long-options, so this check should suffice:
+if ! date --version > /dev/null 2>&1; then
+    echo "Sorry, GNU date is required" >&2
+    date --version 2>&1 | head -n1 >&-2
+    exit 1
+fi
+
 
 print_remaining() {
     local total_seconds=$1
@@ -204,13 +213,6 @@ if [ ! -x "$arg_script" ]; then
     echo "\"$arg_script\": not executable, or doesn't exist" >&2
     exit 1
 fi
-
-date +"${small_time_fmt}" -d "$arg_time" > /dev/null 2>&1 || {
-    echo -n "Failed to run \`date\` command: " >&2
-    echo "date +\"${small_time_fmt}\" -d \"$arg_time\"" >&2
-    date --version 2>&1 | head -n1 >&2
-    exit 1
-}
 
 if which figlet > /dev/null 2>&1; then
     figlet=1
