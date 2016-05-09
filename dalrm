@@ -38,13 +38,19 @@ for dep in ${deps[@]}; do
 done
 
 # We really depend on GNU date. 
+datewrap=date
 # BSD date lacks long-options, so this check should suffice:
 if ! date --version > /dev/null 2>&1; then
+    # Look for alternative date binaries 
+    for dtest in gdate gnudate; do
+        if which $dtest > /dev/null 2>&1; then
+            datewrap=$dtest
+            break
+        fi
+     done
     echo "Sorry, GNU date is required" >&2
-    date --version 2>&1 | head -n1 >&-2
     exit 1
 fi
-
 
 print_remaining() {
     local total_seconds=$1
@@ -99,7 +105,7 @@ readkey() {
 
 snoozecheck() {
     # Note: user_input is global
-    local time_beg=$(date +"%s")
+    local time_beg=$($datewrap +"%s")
     local displayed=
 
     until [ "$user_input" = "$key_quit" -o \
@@ -112,7 +118,7 @@ snoozecheck() {
 
         readkey
 
-        local time_end=$(date +"%s")
+        local time_end=$($datewrap +"%s")
         let time_diff="$time_end - $time_beg"
         if [ $time_diff -ge $read_timeout ]; then
             break
@@ -134,8 +140,8 @@ ring() {
             exit
         ;;
         "$key_snooze")
-            unixtime_alarm=$(date +"%s" -d "$snooze_time")
-            human_alarm="$(date +"${small_time_fmt}" -d "$snooze_time")"
+            unixtime_alarm=$($datewrap +"%s" -d "$snooze_time")
+            human_alarm="$($datewrap +"${small_time_fmt}" -d "$snooze_time")"
             clear
         ;;
     esac
@@ -147,8 +153,8 @@ alrm() {
     local let seconds=2 # Anything greater than 1
     while [ $seconds -gt 1 ]
     do
-        unixtime_now="$(date +%s)"
-        human_now="$(date +"${small_time_fmt}")"
+        unixtime_now="$($datewrap +%s)"
+        human_now="$($datewrap +"${small_time_fmt}")"
         let seconds="$unixtime_alarm - $unixtime_now"
 
         echo -en "\
@@ -164,8 +170,8 @@ ${ansi_red}${human_alarm}${ansi_clr_colors} ("
             figlet_args="-w $term_width -c -f \"$figlet_font\""
 
             echo -e "$ansi_clr_line"
-            figlet_time="$(date +"$figlet_time_fmt")"
-            figlet_alarm=$(date +"$figlet_time_fmt" -d @$unixtime_alarm)
+            figlet_time="$($datewrap +"$figlet_time_fmt")"
+            figlet_alarm=$($datewrap +"$figlet_time_fmt" -d @$unixtime_alarm)
 
             eval figlet $figlet_args "$figlet_time"
             echo -e "${ansi_red}\n"
@@ -222,8 +228,8 @@ if which figlet > /dev/null 2>&1; then
     fi
 fi
 
-unixtime_alarm=$(date +"%s" -d "$arg_time")
-human_alarm="$(date +"${small_time_fmt}" -d "$arg_time")"
+unixtime_alarm=$($datewrap +"%s" -d "$arg_time")
+human_alarm="$($datewrap +"${small_time_fmt}" -d "$arg_time")"
 
 clear
 echo -e "${ansi_save_cursor}"
