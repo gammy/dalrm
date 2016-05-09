@@ -7,7 +7,7 @@
 read_timeout=10 # Must be in seconds
  snooze_time="10 minutes"
 
- small_time_fmt="%a%e, %H:%M:%S"
+ small_time_fmt="%a %e, %H:%M:%S"
 figlet_time_fmt="%H : %M"
 
   key_quit=q
