@@ -151,8 +151,7 @@ ring() {
 
 alrm() {
     local let seconds=2 # Anything greater than 1
-    while [ $seconds -gt 1 ]
-    do
+    while [ $seconds -gt 1 ]; do
         unixtime_now="$($datewrap +%s)"
         human_now="$($datewrap +"${small_time_fmt}")"
         let seconds="$unixtime_alarm - $unixtime_now"
@@ -166,16 +165,18 @@ ${ansi_red}${human_alarm}${ansi_clr_colors} ("
         echo -e ")${ansi_clr_line}"
 
         if [ "$figlet" = "1" ]; then
-            term_width=$(tput cols)
-            figlet_args="-w $term_width -c -f \"$figlet_font\""
+            # -c: Center text
+            # -t: Utilize full width of the terminal (default is otherwise 80)
+            # -f: font filename
+            figlet_args="-c -t -f \"$figlet_font\""
 
             echo -e "$ansi_clr_line"
             figlet_time="$($datewrap +"$figlet_time_fmt")"
-            figlet_alarm=$($datewrap +"$figlet_time_fmt" -d @$unixtime_alarm)
+            figlet_alarm_time=$($datewrap +"$figlet_time_fmt" -d @$unixtime_alarm)
 
             eval figlet $figlet_args "$figlet_time"
             echo -e "${ansi_red}\n"
-            eval figlet $figlet_args "$figlet_alarm"
+            eval figlet $figlet_args "$figlet_alarm_time"
             echo -en "${ansi_clr_colors}"
         fi
 
