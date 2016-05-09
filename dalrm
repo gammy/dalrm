@@ -32,7 +32,7 @@ if [ -z "$BASH_VERSION" ]; then
     exit 1
 fi
 
-deps=(pkill date bash grep stty)
+deps=(pkill date bash grep stty tput)
 for dep in ${deps[@]}; do
         which $dep > /dev/null || exit $?
 done
@@ -149,14 +149,17 @@ alrm() {
         echo -n '('; print_remaining $seconds; echo -e ")${ansi_clr_line}"
 
         if [ "$figlet" = "1" ]; then
+            term_width=$(tput cols)
+            figlet_args="-w $term_width -c -f \"$figlet_font\""
+
             echo -e "$ansi_clr_line"
             figlet_time="$(date +"$figlet_format_time")"
             figlet_alarm=$(date +"$figlet_format_alarm" -d @$unixtime_alarm)
 
-            figlet -c -f "$figlet_font" "$figlet_time"
+            eval figlet $figlet_args "$figlet_time"
             echo -en "${ansi_red}"
             echo
-            figlet -c -f "$figlet_font" "$figlet_alarm"
+            eval figlet $figlet_args "$figlet_alarm"
             echo -en "${ansi_clr_colors}"
         fi
 
