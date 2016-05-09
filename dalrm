@@ -142,11 +142,13 @@ alrm() {
         human_now="$(date +"${small_time_fmt}")"
         let seconds="$unixtime_alarm - $unixtime_now"
 
-        echo -en "${ansi_restore_cursor}"
-        echo -en "${human_now}, $arg_script will loop every "
-        echo -e "${read_timeout} seconds starting ${ansi_clr_line}"
-        echo -en "${ansi_red}${human_alarm}${ansi_clr_colors} "
-        echo -n '('; print_remaining $seconds; echo -e ")${ansi_clr_line}"
+        echo -en "\
+${ansi_restore_cursor}\
+${human_now}, $arg_script will loop every \
+${read_timeout} seconds starting ${ansi_clr_line}
+${ansi_red}${human_alarm}${ansi_clr_colors} ("
+        print_remaining $seconds
+        echo -e ")${ansi_clr_line}"
 
         if [ "$figlet" = "1" ]; then
             term_width=$(tput cols)
@@ -157,8 +159,7 @@ alrm() {
             figlet_alarm=$(date +"$figlet_time_fmt" -d @$unixtime_alarm)
 
             eval figlet $figlet_args "$figlet_time"
-            echo -en "${ansi_red}"
-            echo
+            echo -e "${ansi_red}\n"
             eval figlet $figlet_args "$figlet_alarm"
             echo -en "${ansi_clr_colors}"
         fi
@@ -175,16 +176,17 @@ alrm() {
 
 if [ $# -ne 2 ]; then
     me="$(basename $0)"
-    echo "Usage: $me <script path> <time>"
-    echo
-    echo "Examples:"
-    echo "  $me ./test.bash 06:30"
-    echo "  $me ~/.dalrm \"Friday 13:00\""
-    echo "  $me \$(which ls) \"1 minute 10 seconds\""
-    echo
-    echo "^C or '$key_quit' exits; '$key_snooze' snoozes"
-    echo
-    echo "Install figlet (and fonts) to enhance the display"
+    echo "\
+Usage: $me <script path> <time>
+
+Examples:
+  $me ./test.bash 06:30
+  $me ~/.dalrm \"Friday 13:00\"
+  $me \$(which ls) \"1 minute 10 seconds\"
+
+^C or '$key_quit' exits; '$key_snooze' snoozes
+
+Install figlet (and fonts) to enhance the display"
     exit 0
 fi
 
