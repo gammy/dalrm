@@ -32,7 +32,7 @@ if [ -z "$BASH_VERSION" ]; then
     exit 1
 fi
 
-deps=(pkill date bash grep stty tput)
+deps=(pkill date bash grep stty)
 for dep in ${deps[@]}; do
         which $dep > /dev/null || exit $?
 done
@@ -175,7 +175,7 @@ ${ansi_red}${human_alarm}${ansi_clr_colors} ("
             figlet_alarm_time=$($datewrap +"$figlet_time_fmt" -d @$unixtime_alarm)
 
             eval figlet $figlet_args "$figlet_time"
-            echo -e "${ansi_red}\n"
+            echo -en "${ansi_red}"
             eval figlet $figlet_args "$figlet_alarm_time"
             echo -en "${ansi_clr_colors}"
         fi
