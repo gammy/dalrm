@@ -6,17 +6,17 @@
 
 read_timeout=10 # Must be in seconds
  snooze_time="10 minutes"
-human_format="%a%e, %H:%M:%S"
+
+ small_time_fmt="%a%e, %H:%M:%S"
+figlet_time_fmt="%H : %M"
 
   key_quit=q
 key_snooze=s
             
-# Toilet settings. If the font is missing, the default will be tried.
+# Figlet settings. If the font is missing, the default will be tried.
 # Some cool ones: cricket, basic, graffiti, larry3d, sblood, shadow
    figlet_font_path="/usr/share/figlet"
         figlet_font="$figlet_font_path/cricket.flf"
- figlet_format_time="%H : %M"
-figlet_format_alarm="%H : %M"
 
           ansi_dred="\e[31m" # red
            ansi_red="\e[1;31m" # bold + red
@@ -126,7 +126,7 @@ ring() {
         ;;
         "$key_snooze")
             unixtime_alarm=$(date +"%s" -d "$snooze_time")
-            human_alarm="$(date +"${human_format}" -d "$snooze_time")"
+            human_alarm="$(date +"${small_time_fmt}" -d "$snooze_time")"
             clear
         ;;
     esac
@@ -139,7 +139,7 @@ alrm() {
     while [ $seconds -gt 1 ]
     do
         unixtime_now="$(date +%s)"
-        human_now="$(date +"${human_format}")"
+        human_now="$(date +"${small_time_fmt}")"
         let seconds="$unixtime_alarm - $unixtime_now"
 
         echo -en "${ansi_restore_cursor}"
@@ -153,8 +153,8 @@ alrm() {
             figlet_args="-w $term_width -c -f \"$figlet_font\""
 
             echo -e "$ansi_clr_line"
-            figlet_time="$(date +"$figlet_format_time")"
-            figlet_alarm=$(date +"$figlet_format_alarm" -d @$unixtime_alarm)
+            figlet_time="$(date +"$figlet_time_fmt")"
+            figlet_alarm=$(date +"$figlet_time_fmt" -d @$unixtime_alarm)
 
             eval figlet $figlet_args "$figlet_time"
             echo -en "${ansi_red}"
@@ -203,9 +203,9 @@ if [ ! -x "$arg_script" ]; then
     exit 1
 fi
 
-date +"${human_format}" -d "$arg_time" > /dev/null 2>&1 || {
+date +"${small_time_fmt}" -d "$arg_time" > /dev/null 2>&1 || {
     echo -n "Failed to run \`date\` command: " >&2
-    echo "date +\"${human_format}\" -d \"$arg_time\"" >&2
+    echo "date +\"${small_time_fmt}\" -d \"$arg_time\"" >&2
     date --version 2>&1 | head -n1 >&2
     exit 1
 }
@@ -219,7 +219,7 @@ if which figlet > /dev/null 2>&1; then
 fi
 
 unixtime_alarm=$(date +"%s" -d "$arg_time")
-human_alarm="$(date +"${human_format}" -d "$arg_time")"
+human_alarm="$(date +"${small_time_fmt}" -d "$arg_time")"
 
 clear
 echo -e "${ansi_save_cursor}"
