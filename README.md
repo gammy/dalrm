@@ -15,8 +15,9 @@ Examples:
 Note: <script path> *must* be a relative or absolute path. I.e
       `./test.bash` or `/path/to/test.bash`, but not `test.bash`
 
-Install toilet (and fonts) to enhance the display
+Install figlet (and fonts) to enhance the display
 ```
 
 Note: Don't put anything important (`rsync`, etc) in the script; it's killed after `read_timeout`
-Basic dependencies are `bash`, `pkill` and possibly the GNU variant of `date``
+
+Basic dependencies are `bash`, `pkill` and GNU `date`
