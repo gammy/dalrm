@@ -13,9 +13,9 @@ key_snooze=s
             
 # Toilet settings. If the font is missing, the default will be tried.
 # Some cool ones: cricket, basic, graffiti, larry3d, sblood, shadow
-        toilet_font="cricket"
- toilet_format_time="%H : %M"
-toilet_format_alarm="%H : %M"
+        figlet_font="/usr/share/figlet/cricket.flf"
+ figlet_format_time="%H : %M"
+figlet_format_alarm="%H : %M"
 
           ansi_dred="\e[31m" # red
            ansi_red="\e[1;31m" # bold + red
@@ -39,6 +39,12 @@ done
 print_remaining() {
     local total_seconds=$1
     local dd hh mm ss ut
+    if [ $total_seconds -lt 0 ]; then
+        # abs of total_seconds
+        let total_seconds="$total_seconds * -1"
+        local the_past_f=1
+    fi
+
     let dd="$total_seconds / 60 / 60 / 24"
     let hh="$total_seconds / 60 / 60 % 24"
     let mm="$total_seconds / 60 % 60"
@@ -68,6 +74,9 @@ print_remaining() {
     fi
  
     echo -en "${ut[@]}"
+    if [ $the_past_f ]; then
+        echo -en ' ago'
+     fi
 }
 
 readkey() {
@@ -138,14 +147,15 @@ alrm() {
         echo -en "${ansi_red}${human_alarm}${ansi_clr_colors} "
         echo -n '('; print_remaining $seconds; echo -e ")${ansi_clr_line}"
 
-        if [ "$toilet" = "1" ]; then
+        if [ "$figlet" = "1" ]; then
             echo -e "$ansi_clr_line"
-            toilet_time="$(date +"$toilet_format_time")"
-            toilet_alarm=$(date +"$toilet_format_alarm" -d @$unixtime_alarm)
-            toilet --filter crop --font "$toilet_font" "$toilet_time"
+            figlet_time="$(date +"$figlet_format_time")"
+            figlet_alarm=$(date +"$figlet_format_alarm" -d @$unixtime_alarm)
+
+            figlet -c -f "$figlet_font" "$figlet_time"
             echo -en "${ansi_red}"
             echo
-            toilet --filter crop --font "$toilet_font" "$toilet_alarm"
+            figlet -c -f "$figlet_font" "$figlet_alarm"
             echo -en "${ansi_clr_colors}"
         fi
 
@@ -165,20 +175,23 @@ if [ $# -ne 2 ]; then
     echo
     echo "Examples:"
     echo "  $me ./test.bash 06:30"
-    echo "  $me ./test.bash \"Friday 13:00\""
+    echo "  $me ~/.dalrm \"Friday 13:00\""
     echo "  $me \$(which ls) \"1 minute 10 seconds\""
     echo
     echo "^C or '$key_quit' exits; '$key_snooze' snoozes"
     echo
-    echo "Note: <script path> *must* be a relative or absolute path. I.e"
-    echo "      \`./test.bash\` or \`/path/to/test.bash\`, but not \`test.bash\`"
-    echo
-    echo "Install toilet (and fonts) to enhance the display"
+    echo "Install figlet (and fonts) to enhance the display"
     exit 0
 fi
 
 arg_script="$1"
 arg_time="$2"
+
+# Prepend './' to the specified script if no path (beginning with '/') is found
+# Is this insecure? Hm
+if [[ $arg_script != /* ]]; then 
+    arg_script="./$arg_script"
+fi
 
 # Sanity checks
 if [ ! -x "$arg_script" ]; then
@@ -193,11 +206,11 @@ date +"${human_format}" -d "$arg_time" > /dev/null 2>&1 || {
     exit 1
 }
 
-if which toilet > /dev/null 2>&1; then
-    toilet=1
-    # Switch to the stock figlet font if we fail to run toilet with the preset 
-    if ! toilet --font "$toilet_font" fonttest > /dev/null 2>&1; then
-        toilet_font="ascii9"
+if which figlet > /dev/null 2>&1; then
+    figlet=1
+    # Switch to the stock figlet font if we fail to run figlet with the preset 
+    if ! figlet -f "$figlet_font" fonttest > /dev/null 2>&1; then
+        figlet_font="ascii9"
     fi
 fi
 
