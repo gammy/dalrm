@@ -229,8 +229,8 @@ if which figlet > /dev/null 2>&1; then
     fi
 fi
 
-unixtime_alarm=$($datewrap +"%s" -d "$arg_time")
-human_alarm="$($datewrap +"${small_time_fmt}" -d "$arg_time")"
+unixtime_alarm=$($datewrap +"%s" -d "$arg_time") || exit
+human_alarm="$($datewrap +"${small_time_fmt}" -d "$arg_time")" || exit
 
 clear
 echo -e "${ansi_save_cursor}"
