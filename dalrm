@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Diox' Alarm by gammy (https://github.com/gammypoofle/dalrm.git)
+# Diox' Alarm by gammy (https://github.com/gammy/dalrm.git)
 # Note: Don't put anything important (rsync, etc) in the script; it's killed
 #       after read_timeout
 # Basic dependencies are `bash`, `pkill` and the GNU variant of `date`
