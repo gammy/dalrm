@@ -16,7 +16,7 @@ key_snooze=s
 # Figlet settings. If the font is missing, the default will be tried.
 # Some cool ones: cricket, basic, graffiti, larry3d, sblood, shadow
    figlet_font_path="/usr/share/figlet"
-        figlet_font="$figlet_font_path/cricket.flf"
+        figlet_font="$figlet_font_path/mono9.flf"
 
           ansi_dred="\e[31m" # red
            ansi_red="\e[1;31m" # bold + red
@@ -160,7 +160,7 @@ alrm() {
 ${ansi_restore_cursor}\
 ${human_now}, $arg_script will loop every \
 ${read_timeout} seconds starting ${ansi_clr_line}
-${ansi_red}${human_alarm}${ansi_clr_colors} ("
+${ansi_red}${human_alarm}${ansi_clr_colors} ($arg_message"
         print_remaining $seconds
         echo -e ")${ansi_clr_line}"
 
@@ -190,28 +190,39 @@ ${ansi_red}${human_alarm}${ansi_clr_colors} ("
     ring
 }
 
-if [ $# -ne 2 ]; then
+if [ $# -lt 2 ]; then
     me="$(basename $0)"
     echo "\
-Usage: $me <script path> <time>
+$me: A terminal alarm clock of sorts
+Usage: $me <script path> <time> [message]
 
 Examples:
   $me ./test.bash 06:30
   $me ~/.dalrm \"Friday 13:00\"
   $me \$(which ls) \"1 minute 10 seconds\"
+  $me ringer \"10 minutes\" \"Call mum\"
 
 ^C or '$key_quit' exits; '$key_snooze' snoozes
 
-Install figlet (and fonts) to enhance the display"
+Don't put anything important (rsync, etc) in the script; it's automatically
+killed and restarted every $read_timeout seconds after the alarm has started.
+
+Install figlet (and fonts) to enhance the display."
     exit 0
 fi
 
 arg_script="$1"
 arg_time="$2"
+arg_message="$3"
+
+if [ -n "$arg_message" ]
+then
+    arg_message="$arg_message in "
+fi
 
 # Prepend './' to the specified script if no path (beginning with '/') is found
 # Is this insecure? Hm
-if [[ $arg_script != /* ]]; then 
+if [[ $arg_script != /* && $arg_script != .* ]]; then
     arg_script="./$arg_script"
 fi
 
